@@ -1,0 +1,11 @@
+{
+  "name": "Remix Remix Remix Remix CivicMind",
+  "description": "CivicMind — Government Complaint Assignment Dashboard and AI-Powered Civic Resolution Platform",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

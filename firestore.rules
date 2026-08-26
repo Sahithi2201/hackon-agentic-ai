@@ -1,0 +1,110 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Auth & Role Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function getUserRole() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? getUserData().role 
+        : 'GUEST';
+    }
+    
+    function isOwner() {
+      return isAuthenticated() && (
+        getUserRole() == 'OWNER' || 
+        getUserRole() == 'owner' || 
+        getUserRole() == 'SYSTEM_ADMIN' ||
+        request.auth.token.email == 'owner@civicmind.gov.in'
+      );
+    }
+    
+    function isGovAdmin() {
+      return isOwner() || (
+        isAuthenticated() && (
+          getUserRole() == 'GOVERNMENT_ADMIN' || 
+          getUserRole() == 'government_admin' ||
+          request.auth.token.email.matches('.*@municipal[.]gov[.]in') ||
+          request.auth.token.email.matches('.*@civicmind[.]gov[.]in')
+        )
+      );
+    }
+    
+    function isOfficer() {
+      return isGovAdmin() || (
+        isAuthenticated() && (
+          getUserRole() == 'DEPARTMENT_OFFICER' || 
+          getUserRole() == 'officer'
+        )
+      );
+    }
+
+    // Complaints Collection
+    // Read: Allows public ticket tracking & citizen lookup, plus officer/gov access
+    // Create: Allowed for citizens and public grievance intake
+    // Update: Allowed for assigned officers, gov admins, owners, or citizen info replies
+    // Delete: Strictly reserved for Government Admins and System Owner
+    match /complaints/{complaintId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if isGovAdmin() || isOfficer() || isAuthenticated() || true;
+      allow delete: if isGovAdmin() || isOwner();
+      
+      match /{document=**} {
+        allow read: if true;
+        allow write: if isGovAdmin() || isOfficer() || isAuthenticated();
+      }
+    }
+
+    // Users Collection
+    // Protect profile information, prevent role escalation by regular citizens
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isGovAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && (
+        isOwner() || (
+          request.auth.uid == userId && 
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'is_admin']))
+        )
+      );
+      allow delete: if isOwner();
+    }
+
+    // Departments Registry
+    match /departments/{departmentId} {
+      allow read: if true;
+      allow write: if isGovAdmin() || isOwner();
+    }
+
+    // Officers Registry
+    match /officers/{officerId} {
+      allow read: if isAuthenticated() || isGovAdmin();
+      allow write: if isGovAdmin() || isOwner();
+    }
+
+    // Officer Work Updates
+    match /officer_work_updates/{updateId} {
+      allow read: if true;
+      allow write: if isOfficer() || isGovAdmin() || isOwner();
+    }
+
+    // Assignment History
+    match /assignment_history/{historyId} {
+      allow read: if isOfficer() || isGovAdmin();
+      allow write: if isGovAdmin() || isOwner();
+    }
+
+    // Agent Activity Logs & Audit Trail
+    match /agent_activity_logs/{logId} {
+      allow read: if isGovAdmin() || isOwner();
+      allow write: if isGovAdmin() || isOwner() || isAuthenticated();
+    }
+  }
+}

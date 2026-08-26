@@ -1,0 +1,145 @@
+{
+  "entities": {
+    "complaints": {
+      "title": "Complaints",
+      "description": "Citizen complaints and municipal service requests",
+      "type": "object",
+      "properties": {
+        "complaint_number": { "type": "string" },
+        "citizen_id": { "type": "string" },
+        "citizen_name": { "type": "string" },
+        "citizen_phone": { "type": "string" },
+        "citizen_email": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "subcategory": { "type": "string" },
+        "city": { "type": "string" },
+        "area": { "type": "string" },
+        "colony": { "type": "string" },
+        "ward": { "type": "string" },
+        "street_address": { "type": "string" },
+        "landmark": { "type": "string" },
+        "postal_code": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "problem_duration": { "type": "string" },
+        "problem_started_date": { "type": "string" },
+        "status": { "type": "string" },
+        "system_recommended_risk": { "type": "string" },
+        "system_recommended_reason": { "type": "string" },
+        "final_government_risk": { "type": "string" },
+        "risk_reason": { "type": "string" },
+        "priority": { "type": "string" },
+        "department_id": { "type": "string" },
+        "assigned_department": { "type": "string" },
+        "assigned_officer_name": { "type": "string" },
+        "current_action": { "type": "string" },
+        "next_action": { "type": "string" },
+        "submitted_at": { "type": "string" },
+        "created_at": { "type": "string" },
+        "updated_at": { "type": "string" }
+      },
+      "required": ["complaint_number", "title", "description", "category", "city", "area", "colony", "status", "final_government_risk", "created_at"]
+    },
+    "users": {
+      "title": "Users",
+      "description": "User profiles for citizens and municipal personnel",
+      "type": "object",
+      "properties": {
+        "full_name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["full_name", "role", "created_at"]
+    },
+    "departments": {
+      "title": "Departments",
+      "description": "Municipal departments and contact info",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "contact_information": { "type": "string" },
+        "sla_default_hours": { "type": "number" }
+      },
+      "required": ["name"]
+    },
+    "officers": {
+      "title": "Officers",
+      "description": "Department field officers authorized to handle complaints",
+      "type": "object",
+      "properties": {
+        "officer_id": { "type": "string" },
+        "name": { "type": "string" },
+        "department_key": { "type": "string" },
+        "department_name": { "type": "string" },
+        "phone": { "type": "string" },
+        "designation": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["officer_id", "name", "department_name"]
+    },
+    "officer_work_updates": {
+      "title": "Officer Work Updates",
+      "description": "Field progress and resolution submissions by officers awaiting government review",
+      "type": "object",
+      "properties": {
+        "update_id": { "type": "string" },
+        "complaint_id": { "type": "string" },
+        "officer_id": { "type": "string" },
+        "officer_name": { "type": "string" },
+        "department_name": { "type": "string" },
+        "progress_percentage": { "type": "number" },
+        "work_status": { "type": "string" },
+        "work_description": { "type": "string" },
+        "next_action": { "type": "string" },
+        "issues_encountered": { "type": "string" },
+        "estimated_completion": { "type": "string" },
+        "materials_used": { "type": "string" },
+        "proof_image_url": { "type": "string" },
+        "submitted_at": { "type": "string" },
+        "government_review_status": { "type": "string" },
+        "government_reviewed_by": { "type": "string" },
+        "government_reviewed_at": { "type": "string" },
+        "government_feedback": { "type": "string" }
+      },
+      "required": ["update_id", "complaint_id", "officer_name", "work_status", "submitted_at", "government_review_status"]
+    },
+    "assignment_history": {
+      "title": "Assignment History",
+      "description": "Audit trail of officer assignments and status changes",
+      "type": "object",
+      "properties": {
+        "complaint_id": { "type": "string" },
+        "officer_id": { "type": "string" },
+        "officer_name": { "type": "string" },
+        "department_id": { "type": "string" },
+        "department_name": { "type": "string" },
+        "assigned_by": { "type": "string" },
+        "assigned_at": { "type": "string" },
+        "previous_status": { "type": "string" },
+        "new_status": { "type": "string" }
+      },
+      "required": ["complaint_id", "officer_id", "assigned_at"]
+    },
+    "agent_activity_logs": {
+      "title": "Agent Activity Logs",
+      "description": "Autonomous AI Agent activity logs, decisions, confidence, and audit trail",
+      "type": "object",
+      "properties": {
+        "agentRole": { "type": "string" },
+        "agentName": { "type": "string" },
+        "complaintId": { "type": "string" },
+        "action": { "type": "string" },
+        "summary": { "type": "string" },
+        "confidence": { "type": "number" },
+        "status": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["agentRole", "agentName", "complaintId", "action", "status"]
+    }
+  }
+}
