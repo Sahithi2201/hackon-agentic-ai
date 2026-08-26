@@ -19,7 +19,7 @@ import {
   Phone
 } from 'lucide-react';
 import { AppView } from '../types';
-import { getCurrentUser, logoutUser } from '../services/authService';
+import { getCurrentUser, logoutUser, canAccessGovernmentPortal } from '../services/authService';
 import citizenPortalBg from '../assets/images/citizen_grievance_desk_1787490850787.jpg';
 
 interface CitizenLayoutProps {
@@ -170,23 +170,25 @@ export const CitizenLayout: React.FC<CitizenLayoutProps> = ({
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
           </div>
 
-          {/* Quick Portal Switch */}
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={onSwitchToGov}
-              className="py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              title="Access Government Admin Portal"
-            >
-              <ArrowLeftRight className="w-3.5 h-3.5 text-blue-600" />
-              <span>Gov Portal</span>
-            </button>
+          {/* Quick Actions / Logout */}
+          <div className="space-y-2">
+            {canAccessGovernmentPortal(currentUser) && (
+              <button
+                onClick={onSwitchToGov}
+                className="w-full py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                title="Access Government Admin Portal"
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5 text-blue-600" />
+                <span>Switch to Gov Portal</span>
+              </button>
+            )}
 
             <button
               onClick={handleLogout}
-              className="py-2 px-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              className="w-full py-2 px-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5 text-rose-600" />
-              <span>Logout</span>
+              <span>Logout ({displayName})</span>
             </button>
           </div>
         </div>
@@ -265,15 +267,17 @@ export const CitizenLayout: React.FC<CitizenLayoutProps> = ({
               </button>
             ))}
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-              <button
-                onClick={() => {
-                  onSwitchToGov();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="text-xs text-blue-600 font-bold cursor-pointer"
-              >
-                Government Access
-              </button>
+              {canAccessGovernmentPortal(currentUser) ? (
+                <button
+                  onClick={() => {
+                    onSwitchToGov();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="text-xs text-blue-600 font-bold cursor-pointer"
+                >
+                  Government Access
+                </button>
+              ) : <div />}
               <button
                 onClick={handleLogout}
                 className="text-xs text-rose-600 font-bold cursor-pointer"

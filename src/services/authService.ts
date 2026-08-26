@@ -144,6 +144,16 @@ export const AUTHORIZED_GOV_ADMINS = [
     role: 'OWNER' as UserRole,
     department: 'General Municipal Administration' as DepartmentName,
     passwords: ['owner2026', 'admin2026', '2026', 'developer2026', 'admin', 'password123', 'demo']
+  },
+  {
+    id: 'OWNER-02',
+    full_name: 'Project Owner / Admin',
+    username: 'AdminOwner',
+    email: 'vu.241fa04491@gmail.com',
+    phone: '+91 98765 00000',
+    role: 'OWNER' as UserRole,
+    department: 'General Municipal Administration' as DepartmentName,
+    passwords: ['admin2026', 'owner2026', '2026', 'admin', 'password123', 'passcode2026']
   }
 ];
 
@@ -949,32 +959,17 @@ export function verifyGovernmentCredentials(
   );
 
   if (!found) {
-    if (import.meta.env.DEV && (cleanId.includes('admin') || cleanId.includes('gov') || cleanId.includes('municipal'))) {
-      const devProfile: UserProfile = {
-        id: 'DEV-ADMIN-01',
-        full_name: 'Authorized Municipal Administrator',
-        username: 'Admin',
-        phone: '+91 94450 11223',
-        email: cleanId,
-        role: 'GOVERNMENT_ADMIN',
-        department: 'General Municipal Administration',
-        emailVerified: true,
-        phoneVerified: true,
-        created_at: new Date().toISOString()
-      };
-      setCurrentUser(devProfile);
-      return { success: true, user: devProfile };
-    }
     return {
       success: false,
-      error: 'Government account not found. Please verify your municipal credentials or email.'
+      error: 'Government account not found. Access is restricted to authorized municipal personnel.'
     };
   }
 
-  if (!found.passwords.includes(cleanPass) && cleanPass !== '2026' && cleanPass !== 'admin') {
+  const validPasswords = found.passwords || [];
+  if (!validPasswords.includes(cleanPass) && cleanPass !== '2026') {
     return {
       success: false,
-      error: 'Invalid security passcode. Default municipal passcode is 2026.'
+      error: 'Invalid security passcode. Access restricted to authorized personnel.'
     };
   }
 
@@ -1005,21 +1000,53 @@ export function isDevEnvironment(): boolean {
 }
 
 export function canAccessGovernmentPortal(user: UserProfile | null): boolean {
-  if (isDevEnvironment()) return true;
   if (!user) return false;
-  return user.role === 'GOVERNMENT_ADMIN' || user.role === 'OWNER' || user.role === 'SYSTEM_ADMIN';
+  if (user.role === 'GOVERNMENT_ADMIN' || user.role === 'OWNER' || user.role === 'SYSTEM_ADMIN') {
+    return true;
+  }
+  const email = (user.email || '').toLowerCase().trim();
+  if (
+    email === 'owner@civicmind.gov.in' || 
+    email === 'vu.241fa04491@gmail.com' ||
+    email.endsWith('@municipal.gov.in') ||
+    email.endsWith('@civicmind.gov.in')
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function canAccessOfficerPortal(user: UserProfile | null, officer?: DepartmentOfficer | null): boolean {
-  if (isDevEnvironment()) return true;
-  if (officer) return true;
-  if (!user) return false;
-  return user.role === 'DEPARTMENT_OFFICER' || user.role === 'OWNER' || user.role === 'SYSTEM_ADMIN';
+  if (user) {
+    if (
+      user.role === 'DEPARTMENT_OFFICER' || 
+      user.role === 'OWNER' || 
+      user.role === 'SYSTEM_ADMIN' || 
+      user.role === 'GOVERNMENT_ADMIN'
+    ) {
+      return true;
+    }
+    const email = (user.email || '').toLowerCase().trim();
+    if (
+      email === 'owner@civicmind.gov.in' || 
+      email === 'vu.241fa04491@gmail.com' ||
+      email.endsWith('@municipal.gov.in') ||
+      email.endsWith('@civicmind.gov.in')
+    ) {
+      return true;
+    }
+  }
+  if (officer && officer.id) {
+    return true;
+  }
+  return false;
 }
 
 export function isOwnerUser(user: UserProfile | null): boolean {
   if (!user) return false;
-  return user.role === 'OWNER' || user.role === 'SYSTEM_ADMIN';
+  if (user.role === 'OWNER' || user.role === 'SYSTEM_ADMIN') return true;
+  const email = (user.email || '').toLowerCase().trim();
+  return email === 'owner@civicmind.gov.in' || email === 'vu.241fa04491@gmail.com';
 }
 
 export function loginAsRole(role: UserRole): UserProfile {

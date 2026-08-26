@@ -1,11 +1,15 @@
 import React from 'react';
 import { MapPin, Cpu, ShieldCheck, Activity, Award, HeartHandshake, ExternalLink } from 'lucide-react';
+import { getCurrentUser, canAccessGovernmentPortal } from '../services/authService';
 
 interface FooterProps {
   setActiveTab: (tab: string) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
+  const currentUser = getCurrentUser();
+  const isAdmin = canAccessGovernmentPortal(currentUser);
+
   return (
     <footer className="w-full bg-[#07111F] border-t border-slate-800 text-slate-400 text-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -46,20 +50,29 @@ export const Footer: React.FC<FooterProps> = ({ setActiveTab }) => {
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveTab('command-center')} className="hover:text-[#21D4FD] transition-colors cursor-pointer">
-                  Command Center Operations
+                <button onClick={() => setActiveTab('track')} className="hover:text-[#21D4FD] transition-colors cursor-pointer">
+                  Track Grievance Status
                 </button>
               </li>
-              <li>
-                <button onClick={() => setActiveTab('city-intelligence')} className="hover:text-[#21D4FD] transition-colors cursor-pointer">
-                  City Intelligence & Hotspots
-                </button>
-              </li>
-              <li>
-                <button onClick={() => setActiveTab('ai-engine')} className="hover:text-[#21D4FD] transition-colors cursor-pointer">
-                  AI Multi-Agent Resolution Engine
-                </button>
-              </li>
+              {isAdmin && (
+                <>
+                  <li>
+                    <button onClick={() => setActiveTab('command-center')} className="hover:text-[#21D4FD] transition-colors cursor-pointer">
+                      Command Center Operations
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => setActiveTab('city-intelligence')} className="hover:text-[#21D4FD] transition-colors cursor-pointer">
+                      City Intelligence & Hotspots
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => setActiveTab('ai-engine')} className="hover:text-[#21D4FD] transition-colors cursor-pointer">
+                      AI Multi-Agent Resolution Engine
+                    </button>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 

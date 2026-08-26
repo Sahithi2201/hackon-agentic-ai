@@ -11,6 +11,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { APOfficer } from '../../types/apProjectTypes';
+import { getCurrentUser, canAccessGovernmentPortal, canAccessOfficerPortal } from '../../services/authService';
 
 interface APNavbarProps {
   currentView: 'landing' | 'gov-dashboard' | 'officer-dashboard' | 'officer-login' | 'gov-login';
@@ -29,6 +30,10 @@ export const APNavbar: React.FC<APNavbarProps> = ({
   onLogout,
   onOpenPortalPicker
 }) => {
+  const currentUser = getCurrentUser();
+  const isAdmin = canAccessGovernmentPortal(currentUser);
+  const isOfficer = canAccessOfficerPortal(currentUser) || !!activeOfficer;
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs">
       {/* Top Gold & Navy State Banner */}
@@ -82,32 +87,36 @@ export const APNavbar: React.FC<APNavbarProps> = ({
             Public Transparency
           </button>
 
-          <button
-            onClick={() => onNavigate('gov-dashboard')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              currentView === 'gov-dashboard'
-                ? 'bg-blue-900 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>Government Dashboard</span>
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => onNavigate('gov-dashboard')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                currentView === 'gov-dashboard'
+                  ? 'bg-blue-900 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Government Dashboard</span>
+            </button>
+          )}
 
-          <button
-            onClick={() => onNavigate(activeOfficer ? 'officer-dashboard' : 'officer-login')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              currentView === 'officer-dashboard' || currentView === 'officer-login'
-                ? 'bg-blue-900 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>Officer Portal</span>
-            {activeOfficer && (
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            )}
-          </button>
+          {(isAdmin || isOfficer) && (
+            <button
+              onClick={() => onNavigate(activeOfficer ? 'officer-dashboard' : 'officer-login')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                currentView === 'officer-dashboard' || currentView === 'officer-login'
+                  ? 'bg-blue-900 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>Officer Portal</span>
+              {activeOfficer && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              )}
+            </button>
+          )}
         </nav>
 
         {/* Right Actions */}
@@ -143,7 +152,7 @@ export const APNavbar: React.FC<APNavbarProps> = ({
                 <span className="hidden sm:inline">Switch</span>
               </button>
             </div>
-          ) : (
+          ) : isAdmin ? (
             <button
               onClick={onOpenPortalPicker}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#003366] to-[#0A4D8C] hover:from-[#002244] hover:to-[#083D6F] text-white text-xs font-black flex items-center gap-2 shadow-md shadow-blue-900/20 hover:shadow-lg transition-all cursor-pointer"
@@ -151,6 +160,8 @@ export const APNavbar: React.FC<APNavbarProps> = ({
               <ShieldCheck className="w-4 h-4 text-amber-300" />
               <span>Government Portal</span>
             </button>
+          ) : (
+            <div />
           )}
         </div>
       </div>

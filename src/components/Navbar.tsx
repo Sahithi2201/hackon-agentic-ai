@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { AIInsightItem, AppView } from '../types';
 
+import { getCurrentUser, canAccessGovernmentPortal } from '../services/authService';
+
 interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: any) => void;
@@ -45,7 +47,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(insights.length);
 
-  const mainNavItems = [
+  const currentUser = getCurrentUser();
+  const isAdmin = canAccessGovernmentPortal(currentUser);
+
+  const citizenNavItems = [
+    { id: 'landing', label: 'Platform' },
+    { id: 'citizen-dashboard', label: 'Citizen Portal' },
+    { id: 'citizen-report', label: 'Report Issue' },
+    { id: 'citizen-track', label: 'Track Case' },
+  ];
+
+  const adminNavItems = [
     { id: 'landing', label: 'Platform' },
     { id: 'citizen-dashboard', label: 'Citizen Portal' },
     { id: 'citizen-report', label: 'Report Issue' },
@@ -56,6 +68,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'analytics', label: 'Analytics' },
     { id: 'citizen-track', label: 'Track Case' },
   ];
+
+  const mainNavItems = isAdmin ? adminNavItems : citizenNavItems;
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
@@ -244,19 +258,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </div>
 
-          <div className="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleTabClick('citizen-login')}
-              className="p-2.5 rounded-xl bg-blue-900/30 border border-blue-700/40 text-cyan-300 text-xs font-bold text-center"
-            >
-              Citizen Login
-            </button>
-            <button
-              onClick={() => handleTabClick('gov-login')}
-              className="p-2.5 rounded-xl bg-cyan-900/30 border border-cyan-700/40 text-cyan-300 text-xs font-bold text-center"
-            >
-              Government Login
-            </button>
+          <div className="pt-3 border-t border-slate-800">
+            {isAdmin ? (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleTabClick('citizen-login')}
+                  className="p-2.5 rounded-xl bg-blue-900/30 border border-blue-700/40 text-cyan-300 text-xs font-bold text-center"
+                >
+                  Citizen Login
+                </button>
+                <button
+                  onClick={() => handleTabClick('gov-login')}
+                  className="p-2.5 rounded-xl bg-cyan-900/30 border border-cyan-700/40 text-cyan-300 text-xs font-bold text-center"
+                >
+                  Government Login
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => handleTabClick('citizen-login')}
+                className="w-full p-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold text-center shadow-md"
+              >
+                Citizen Portal Login
+              </button>
+            )}
           </div>
         </div>
       )}

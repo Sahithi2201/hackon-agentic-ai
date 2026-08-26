@@ -9,15 +9,15 @@ import {
   Compass, 
   Activity, 
   X,
-  MapPin,
-  Cpu,
-  Layers,
-  ShieldAlert,
-  ShieldCheck
+  PlusCircle,
+  ShieldCheck,
+  Lock,
+  ChevronRight
 } from 'lucide-react';
 import { AppView } from '../types';
 import handComplaintStampBg from '../assets/images/complaint_hero_bg_1787391111476.jpg';
 import { APPortalPickerModal } from '../components/ap/APPortalPickerModal';
+import { getCurrentUser, canAccessGovernmentPortal, canAccessOfficerPortal, getActiveOfficer } from '../services/authService';
 
 interface LandingPageProps {
   onNavigate: (view: AppView) => void;
@@ -33,10 +33,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [activeModal, setActiveModal] = useState<'about' | 'how-it-works' | null>(null);
   const [isPortalModalOpen, setIsPortalModalOpen] = useState<boolean>(false);
 
+  const currentUser = getCurrentUser();
+  const activeOfficer = getActiveOfficer();
+  const isAdmin = canAccessGovernmentPortal(currentUser);
+  const isOfficer = canAccessOfficerPortal(currentUser, activeOfficer);
+
   return (
     <div className="h-screen w-screen overflow-hidden text-[#0F172A] flex flex-col justify-between relative select-none">
       
-      {/* Background Layer: Hand holding wooden COMPLAINT stamp photograph replacing white background */}
+      {/* Background Layer: Hand holding wooden COMPLAINT stamp photograph */}
       <div 
         className="fixed inset-0 pointer-events-none -z-20 overflow-hidden"
         style={{
@@ -72,7 +77,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          {/* Quick Informational Modals & Actions */}
+          {/* Header Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setActiveModal('about')}
@@ -86,13 +91,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             >
               How It Works
             </button>
-            <button
-              onClick={() => onNavigate('officer-login')}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1"
-            >
-              <UserCheck className="w-3.5 h-3.5 text-blue-700" />
-              <span>Officer Portal</span>
-            </button>
+
+            {/* Officer Portal Button (ONLY VISIBLE TO LOGGED IN ADMIN OR OFFICER) */}
+            {(isAdmin || isOfficer) && (
+              <button
+                onClick={() => onNavigate('officer-workspace')}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <UserCheck className="w-3.5 h-3.5 text-blue-700" />
+                <span>Officer Portal</span>
+              </button>
+            )}
+
+            {/* Government Command Center Button (ONLY VISIBLE TO LOGGED IN ADMIN) */}
+            {isAdmin && (
+              <button
+                onClick={() => onNavigate('gov-dashboard')}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 border border-slate-700 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+              >
+                <Building2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Command Center</span>
+              </button>
+            )}
+
             <button
               onClick={() => onNavigate('citizen-track')}
               className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors cursor-pointer flex items-center gap-1"
@@ -105,7 +126,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </header>
 
-      {/* 2. CENTER HERO & PORTAL CHOICES (FITS EXACTLY IN VIEWPORT, NO SCROLL) */}
+      {/* 2. CENTER HERO & PORTAL ENTRY */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center text-center py-4 z-10">
         
         {/* Label Eyebrow */}
@@ -125,102 +146,179 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           CivicMind uses AI to understand civic complaints, detect duplicate issues, prioritize public impact, route cases to the correct department, monitor service deadlines, and provide transparent resolution tracking.
         </p>
 
-        {/* TWO LARGE PRIMARY PORTAL CHOICES */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 mt-5 sm:mt-7 w-full max-w-4xl text-left">
-          
-          {/* PORTAL CARD 1: CITIZEN PORTAL */}
-          <div className="group relative p-6 sm:p-7 rounded-3xl bg-white border-2 border-slate-200 hover:border-blue-500 shadow-md hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                  <UserCheck className="w-6 h-6" />
+        {/* PORTAL ENTRIES: CONDITIONAL BASED ON ROLE */}
+        {isAdmin ? (
+          /* ADMIN / OWNER VIEW: Shows both Citizen Portal and Government AI Command Center */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 mt-5 sm:mt-7 w-full max-w-4xl text-left">
+            
+            {/* PORTAL CARD 1: CITIZEN PORTAL */}
+            <div className="group relative p-6 sm:p-7 rounded-3xl bg-white border-2 border-slate-200 hover:border-blue-500 shadow-md hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <UserCheck className="w-6 h-6" />
+                  </div>
+                  <span className="text-[11px] font-bold font-mono px-3 py-1 rounded-full bg-slate-100 text-slate-700">
+                    PUBLIC PORTAL
+                  </span>
                 </div>
-                <span className="text-[11px] font-bold font-mono px-3 py-1 rounded-full bg-slate-100 text-slate-700">
-                  PUBLIC PORTAL
+
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    Citizen Portal
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                    Report civic problems, upload evidence, receive AI-powered analysis, and track every stage of the resolution process.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 mt-3 border-t border-slate-100">
+                <button
+                  onClick={() => onNavigate('citizen-login')}
+                  className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>ENTER CITIZEN PORTAL</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </div>
+
+            {/* PORTAL CARD 2: GOVERNMENT AI COMMAND CENTER */}
+            <div className="group relative p-6 sm:p-7 rounded-3xl bg-white border-2 border-slate-200 hover:border-blue-700 shadow-md hover:shadow-xl hover:shadow-blue-700/10 transition-all duration-300 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-blue-700 group-hover:bg-slate-900 group-hover:text-cyan-300 transition-colors">
+                    <Building2 className="w-6 h-6" />
+                  </div>
+                  <span className="text-[11px] font-bold font-mono px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    ADMIN PRIVILEGED
+                  </span>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                    Government AI Command Center
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                    Monitor live civic issues, detect patterns, prioritize risk, coordinate departments, and manage resolution intelligently.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 mt-3 border-t border-slate-100">
+                <button
+                  onClick={() => setIsPortalModalOpen(true)}
+                  className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>ENTER COMMAND CENTER</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </div>
+
+          </div>
+        ) : (
+          /* NORMAL / PUBLIC USER VIEW: Centered, Focused Citizen Portal Entry */
+          <div className="mt-6 sm:mt-8 w-full max-w-2xl text-left">
+            <div className="group relative p-7 sm:p-9 rounded-3xl bg-white/95 backdrop-blur-sm border-2 border-blue-200 hover:border-blue-500 shadow-xl hover:shadow-2xl hover:shadow-blue-500/15 transition-all duration-300">
+              
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-sm">
+                    <UserCheck className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-2xl font-black text-slate-900">
+                        Citizen Portal
+                      </h3>
+                      <span className="text-[10px] font-bold font-mono px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        OFFICIAL PUBLIC ACCESS
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                      Lodge civic grievances, upload defect photos, receive multi-agent AI verification, and monitor resolution in real time.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Primary Action Button */}
+              <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => onNavigate('citizen-login')}
+                  className="flex-1 py-3.5 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm tracking-wide shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99]"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>ENTER CITIZEN PORTAL</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={onOpenReport}
+                  className="py-3.5 px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs sm:text-sm border border-slate-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4 text-blue-600" />
+                  <span>Report Issue</span>
+                </button>
+              </div>
+
+              {/* Feature Pills */}
+              <div className="mt-4 pt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2 text-[11px] text-slate-500 font-medium">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  Multi-Agent AI Triage
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+                  GPS Deduplication
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-500" />
+                  Real-time SLA Tracking
                 </span>
               </div>
 
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                  Citizen Portal
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
-                  Report civic problems, upload evidence, receive AI-powered analysis, and track every stage of the resolution process.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-4 mt-3 border-t border-slate-100">
-              <button
-                onClick={() => onNavigate('citizen-login')}
-                className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>ENTER CITIZEN PORTAL</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
             </div>
           </div>
-
-          {/* PORTAL CARD 2: GOVERNMENT AI COMMAND CENTER */}
-          <div className="group relative p-6 sm:p-7 rounded-3xl bg-white border-2 border-slate-200 hover:border-blue-700 shadow-md hover:shadow-xl hover:shadow-blue-700/10 transition-all duration-300 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-blue-700 group-hover:bg-slate-900 group-hover:text-cyan-300 transition-colors">
-                  <Building2 className="w-6 h-6" />
-                </div>
-                <span className="text-[11px] font-bold font-mono px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                  ENTERPRISE AI
-                </span>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                  Government AI Command Center
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
-                  Monitor live civic issues, detect patterns, prioritize risk, coordinate departments, and manage resolution intelligently.
-                </p>
-              </div>
-            </div>
-
-            <div className="pt-4 mt-3 border-t border-slate-100">
-              <button
-                onClick={() => setIsPortalModalOpen(true)}
-                className="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>ENTER COMMAND CENTER</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-
-        </div>
+        )}
 
       </main>
 
-      {/* PORTAL PICKER MODAL (GOVERNMENT OR OFFICER) */}
-      <APPortalPickerModal
-        isOpen={isPortalModalOpen}
-        onClose={() => setIsPortalModalOpen(false)}
-        onSelectOption={(option) => {
-          setIsPortalModalOpen(false);
-          if (option === 'government') {
-            onNavigate('gov-login');
-          } else {
-            onNavigate('officer-login');
-          }
-        }}
-      />
+      {/* PORTAL PICKER MODAL (GOVERNMENT OR OFFICER - ADMIN ONLY) */}
+      {isAdmin && (
+        <APPortalPickerModal
+          isOpen={isPortalModalOpen}
+          onClose={() => setIsPortalModalOpen(false)}
+          onSelectOption={(option) => {
+            setIsPortalModalOpen(false);
+            if (option === 'government') {
+              onNavigate('gov-login');
+            } else {
+              onNavigate('officer-login');
+            }
+          }}
+        />
+      )}
 
       {/* 3. CLEAN BOTTOM MUNICIPAL BAR */}
       <footer className="w-full bg-white border-t border-slate-200 py-2.5 px-4 text-center shrink-0 z-40">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between text-[11px] text-slate-500 font-medium">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between text-[11px] text-slate-500 font-medium gap-2">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>Autonomous Civic Intelligence Grid Active</span>
           </div>
-          <div>
-            CivicMind Smart City Operations Framework • Confidential & Secure
+          <div className="flex items-center gap-4">
+            <span>CivicMind Smart City Operations Framework • Confidential & Secure</span>
+            {!isAdmin && (
+              <button
+                onClick={() => onNavigate('gov-login')}
+                className="text-slate-400 hover:text-slate-700 transition-colors underline cursor-pointer text-[10px]"
+              >
+                Staff / Admin Access
+              </button>
+            )}
           </div>
         </div>
       </footer>
